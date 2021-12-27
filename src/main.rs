@@ -5,7 +5,7 @@ use std::fs::{File, OpenOptions};
 use std::io::*;
 
 /*calc hash values*/
-// use ring::Digest::{Context, Digest, SHA256};
+use ring::digest;
 
 /*load external libs*/
 mod lib_peparser;
@@ -25,7 +25,13 @@ enum SearchEngineFileHashes{
     // FileHashSha2(),
 }
 impl SearchEngineFileHashes{
-    fn calculate_sha1() /*-> Result<Digest>*/{
+    fn calculate_sha1() /*-> Result<digest> */{
+
+    }
+    fn calculate_sha2() /*-> Result<digest> */{
+
+    }
+    fn calculate_ssdeep() /*-> Result<digest> */{
 
     }
 }
@@ -44,8 +50,6 @@ struct SearchEngineFile{
     // FileCreationDate, 
     FileHashes: SearchEngineFileHashes,
     IsMalicious: bool,
-
-
 
 }
 
