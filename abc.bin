@@ -1,0 +1,24 @@
+0:  48 8b 01                mov    rax,QWORD PTR [rcx]
+3:  45 33 c0                xor    r8d,r8d
+6:  48 85 c0                test   rax,rax
+9:  74 32                   je     0x3d
+b:  45 8d 48 01             lea    r9d,[r8+0x1]
+f:  90                      nop
+10: 48 8b 10                mov    rdx,QWORD PTR [rax]
+13: 48 89 11                mov    QWORD PTR [rcx],rdx
+16: 4c 39 00                cmp    QWORD PTR [rax],r8
+19: 74 05                   je     0x20
+1b: 4c 89 00                mov    QWORD PTR [rax],r8
+1e: eb 03                   jmp    0x23
+20: 48 89 09                mov    QWORD PTR [rcx],rcx
+23: 48 8d 50 e0             lea    rdx,[rax-0x20]
+27: 33 c0                   xor    eax,eax
+29: f0 44 0f b1 4a 28       lock cmpxchg DWORD PTR [rdx+0x28],r9d
+2f: 74 08                   je     0x39
+31: 48 8b 01                mov    rax,QWORD PTR [rcx]
+34: 48 85 c0                test   rax,rax
+37: 75 d7                   jne    0x10
+39: 48 8b c2                mov    rax,rdx
+3c: c3                      ret
+3d: 49 8b c0                mov    rax,r8
+40: c3                      ret 
