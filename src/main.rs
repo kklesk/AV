@@ -49,7 +49,7 @@ impl SearchEngineFile{
         println!("Search Engine File {:?}",self);
     }
     // fn calculate_hashes(&mut self, path_str: String) -> (Digest){
-        //TODO replace this function with a template function
+    //TODO replace this function with a template function
     fn calculate_hashes(&mut self, path_str: String) {
     
         let mut path = Path::new(&path_str);
@@ -87,8 +87,12 @@ struct SearchEngine{
     se_root_dir: String,
     se_current_dir: String,
     se_file: SearchEngineFile,
+    //TODO get all system devices => look for root device on windows or linux and create default root entrypoint for the OS
     /*TODO Check OS */
-    // Scantime
+    //TODO GET OS User
+    //TODO recursive search
+    //TODO is Directory, is File, is ...
+    //TODO Scantime
     // se_scantime_begin: ,
     // se_scantime_end: ,
     // se_file_extension: SearchEngineExtension,
@@ -125,7 +129,13 @@ impl SearchEngine{
             Err(err) => println!("{:?}", err.kind()),
             Ok(path) =>
                 for file in path{
-                    println!("{:?}",file.unwrap().path());
+                    //Debug Println!
+                    match file {
+                        Err(e) => println!("{}",e),
+                        Ok(file) => 
+                        println!("{:?}",file),
+                        // self.se_file.calculate_hashes(),
+                    };
                     // self.se_file.calculate_hashes(file);      
                 }
         }
@@ -138,10 +148,6 @@ impl SearchEngine{
 }
 
 fn main() {
-
-
-
-//    let e = SearchEngineFileHashes::calculate_sha2();
 
     let mut s1=SearchEngine::new();
     s1.start_search();
