@@ -23,59 +23,6 @@ enum SearchEngineFileExtension{
 }
 
 #[derive(Debug)]
-enum SearchEngineFileHashes{
-    Sha1(Digest),
-    Sha2(Digest),
-}
-impl SearchEngineFileHashes{
-    fn calculate_sha1() /*-> Result<digest> */{
-
-    } 
-    fn calculate_sha2() -> Digest{
-        //TODO add dyn path variable E0277
-        // let mut file_path = Path::new(path);
-        //for debbuging, write static string 
-        let file_path = Path::new("C:\\Users\\Ivan\\development\\AV\\abc.bin");
-        let mut context = Context::new(&SHA256);
-        let mut buffer = [0; 4096];
-
-        let mut file = match File::open(&file_path){
-            Err(err) => panic!("could not open file {} for generate sha256 sum", err),
-            Ok(file) => file,
-        };
-        let buffer_reader = BufReader::new(file);
-
-        loop { 
-            let count = buffer_reader.read(&mut buffer)?;
-            if count == 0 {
-                break;
-            }
-            context.update(&buffer[..count]);
-        }
-        let hash = context.finish();
-        println!("{:?}", hash);
-        hash
-        // Ok(hash)
-        // blake3 library test
-        // let mut hasher = blake3::Hasher::new();
-        // let mut calc_sha2 = [0;1000];
-        // let mut output_reader = hasher.finalize_xof();
-        // output_reader.fill(&mut calc_sha2);
-        // println!("{:?}",calc_sha2);
-        // // let mut output_reader = blake3::Hash(b"hello"); 
-        // // Hasher::hasher.finalzie_xof();
-    
-    }
-    fn calculate_ssdeep() /*-> Result<digest> */{
-
-    }
-}
-
-/*SearchEngineFile
-
-
-*/
-#[derive(Debug)]
 struct SearchEngineFile{
     //TODO add File with multiple file headers
     FileName: String,
@@ -83,12 +30,55 @@ struct SearchEngineFile{
     FileSize: u16,
     // parse meta data creation time, modified time ....
     // FileCreationDate, 
-    FileHashes: SearchEngineFileHashes,
+    FileHashes: Vec<Digest>,
     IsMalicious: bool,
 }
 
 impl SearchEngineFile{
 
+    fn new() -> Self{
+        Self{
+            FileName: "".to_string(),
+            FileExtension: "".to_string(),
+            FileSize: 0,
+            FileHashes: Vec::new(),
+            IsMalicious: false,
+        }    
+    }
+    fn debug(&self){
+        println!("Search Engine File {:?}",self);
+    }
+    // fn calculate_hashes(&mut self, path_str: String) -> (Digest){
+        //TODO replace this function with a template function
+    fn calculate_hashes(&mut self, path_str: String) {
+    
+        let mut path = Path::new(&path_str);
+        // let mut path = Path::new("C:\\Users\\Ivan\\development\\AV\\abc.bin");
+        
+        let current_file = match File::open(&path){
+            Err(e) => panic!("Error in calculate_hashes: {}",e),
+            Ok(file) => file,
+        };
+        let mut buf_reader = BufReader::new(current_file);
+        let mut ctx = Context::new(&SHA256);
+        let mut buffer = [0; 4096];
+        loop { 
+            let count =  match buf_reader.read(& mut buffer){
+                Err(e) => panic!{"Err {}", e},
+                Ok(count) => count,
+            };
+            if count == 0 {
+                break;
+            }
+            ctx.update(&buffer[..count]);
+        }
+
+        //Test cases 
+        self.FileSize = 10;
+        let hash = ctx.finish();
+        self.FileHashes.push(hash);
+
+    }
 }
 
 #[derive(Debug)]
@@ -96,7 +86,7 @@ struct SearchEngine{
 
     se_root_dir: String,
     se_current_dir: String,
-    // se_file: SearchEngineFile,
+    se_file: SearchEngineFile,
     /*TODO Check OS */
     // Scantime
     // se_scantime_begin: ,
@@ -114,65 +104,47 @@ impl SearchEngine{
             //TODO Read User from WIndows API (%USERPROFILE%) and Linux 
             // for directory scan
             se_current_dir: String::from("C:\\Users\\%USERPROFILE%"),
-            }
+            se_file: SearchEngineFile::new(),
+        }
     }
     fn debug(&self){
-        println!("{:?}",self);
+        println!("Search Engine {:?}",self);
+        println!("Search Engine {:?}",self.se_file.debug());
     }
-    fn start_search(&self){
-        // let path = Path::new(&self.se_current_dir);
-        let search_dir=String::from("C:\\Users\\Ivan");
+    fn start_search(& mut self){
+        let path = Path::new(&self.se_root_dir);
+        // let search_dir=String::from("C:\\Users\\Ivan");
 
-         let path = Path::new(&search_dir);
+        //  let path = Path::new(&search_dir);
+        
+        //Test cases 
+        // self.se_file.FileSize = 10;
+        self.se_file.calculate_hashes("C:\\Users\\Ivan\\development\\AV\\abc.bin".to_string());
 
         match fs::read_dir(path) { 
             Err(err) => println!("{:?}", err.kind()),
             Ok(path) =>
                 for file in path{
                     println!("{:?}",file.unwrap().path());
+                    // self.se_file.calculate_hashes(file);      
                 }
+        }
     }
+
     fn scan_file(){
 
     }
 
-    }
 }
-
 
 fn main() {
 
 
 
-   let e = SearchEngineFileHashes::calculate_sha2();
+//    let e = SearchEngineFileHashes::calculate_sha2();
 
-    // let s1=SearchEngine::new();
-    // s1.debug();
-    // s1.start_search();
-
-
-
-    // let hash1 = blake3::hash(b"foobarbaz");
-    // println!("{:?}",hash1);
-
-
-    // let fp = Path::new("C:\\Users\\Ivan\\development\\AV\\abc.bin");
-    // let f = File::open(fp);
-    // let mut buf_reader = BufReader::new(f);
-
-
-
-    // let mut hasher = blake3::Hasher::new();
-
-    // let mut calc_sha2 = [0;1000];
-    // let mut output_reader = hasher.finalize_xof();
-    // output_reader.fill(&mut calc_sha2);
-    // println!("{:?}",calc_sha2);
-
-    // println!(
-    //     "User's Name            whoami::realname():    {}",
-    //     whoami::realname()
-    // );
-     // println!("Hello, world!");
+    let mut s1=SearchEngine::new();
+    s1.start_search();
+    s1.debug();
 
 }
