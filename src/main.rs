@@ -1,8 +1,12 @@
-use lib_peparser::lib_peparser::hello;
+use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io;
+
+
+// 
+use walkdir::WalkDir;
 
 /*calc hash values*/
 use ring::digest::{Context, Digest, SHA256, SHA512};
@@ -25,68 +29,40 @@ enum SearchEngineFileExtension{
 #[derive(Debug)]
 struct SearchEngineFile{
     //TODO add File with multiple file headers
-    FileName: String,
-    FileExtension: String,
-    FileSize: u16,
+    file_name: String,
+    file_extension: String,
+    file_size: u16,
     // parse meta data creation time, modified time ....
     // FileCreationDate, 
-    FileHashes: Vec<Digest>,
-    IsMalicious: bool,
+    file_hashes: Vec<Digest>,
+    is_malicious: bool,
+    is_directory: bool,
 }
 
 impl SearchEngineFile{
 
     fn new() -> Self{
         Self{
-            FileName: "".to_string(),
-            FileExtension: "".to_string(),
-            FileSize: 0,
-            FileHashes: Vec::new(),
-            IsMalicious: false,
+            file_name: "".to_string(),
+            file_extension: "".to_string(),
+            file_size: 0,
+            file_hashes: Vec::new(),
+            is_malicious: false,
+            is_directory: false,
         }    
     }
     fn debug(&self){
         println!("Search Engine File {:?}",self);
     }
-    // fn calculate_hashes(&mut self, path_str: String) -> (Digest){
-    //TODO replace this function with a template function
-    fn calculate_hashes(&mut self, path_str: String) {
-    
-        let mut path = Path::new(&path_str);
-        // let mut path = Path::new("C:\\Users\\Ivan\\development\\AV\\abc.bin");
-        
-        let current_file = match File::open(&path){
-            Err(e) => panic!("Error in calculate_hashes: {}",e),
-            Ok(file) => file,
-        };
-        let mut buf_reader = BufReader::new(current_file);
-        let mut ctx = Context::new(&SHA256);
-        let mut buffer = [0; 4096];
-        loop { 
-            let count =  match buf_reader.read(& mut buffer){
-                Err(e) => panic!{"Err {}", e},
-                Ok(count) => count,
-            };
-            if count == 0 {
-                break;
-            }
-            ctx.update(&buffer[..count]);
-        }
+ }
 
-        //Test cases 
-        self.FileSize = 10;
-        let hash = ctx.finish();
-        self.FileHashes.push(hash);
-
-    }
-}
 
 #[derive(Debug)]
 struct SearchEngine{
-
     se_root_dir: String,
     se_current_dir: String,
     se_file: SearchEngineFile,
+    // se_file: HashMap<String, SearchEngineFile>,
     //TODO get all system devices => look for root device on windows or linux and create default root entrypoint for the OS
     /*TODO Check OS */
     //TODO GET OS User
@@ -104,7 +80,7 @@ struct SearchEngine{
 impl SearchEngine{
     fn new() -> Self{
         Self {
-            se_root_dir: String::from("C:\\"),
+            se_root_dir: String::from("C:\\Users\\Ivan\\development\\test_instance\\testfolder_files\\"),
             //TODO Read User from WIndows API (%USERPROFILE%) and Linux 
             // for directory scan
             se_current_dir: String::from("C:\\Users\\%USERPROFILE%"),
@@ -113,34 +89,47 @@ impl SearchEngine{
     }
     fn debug(&self){
         println!("Search Engine {:?}",self);
-        println!("Search Engine {:?}",self.se_file.debug());
+        // println!("Search Engine {:?}",self.se_file.debug());
     }
-    fn start_search(& mut self){
-        let path = Path::new(&self.se_root_dir);
-        // let search_dir=String::from("C:\\Users\\Ivan");
 
-        //  let path = Path::new(&search_dir);
-        
-        //Test cases 
-        // self.se_file.FileSize = 10;
-        self.se_file.calculate_hashes("C:\\Users\\Ivan\\development\\AV\\abc.bin".to_string());
+    fn start_search(&mut self){
 
-        match fs::read_dir(path) { 
-            Err(err) => println!("{:?}", err.kind()),
-            Ok(path) =>
-                for file in path{
-                    //Debug Println!
-                    match file {
-                        Err(e) => println!("{}",e),
-                        Ok(file) => 
-                        println!("{:?}",file),
-                        // self.se_file.calculate_hashes(),
-                    };
-                    // self.se_file.calculate_hashes(file);      
-                }
+        for entry in WalkDir::new(&self.se_root_dir).into_iter().filter_map(|e| e.ok()){
+            //DEBUG Print 
+            // println!("{:?}",entry.file_name());
+            if entry.path().is_file(){
+                self.calculate_hashes(&entry.path())
+            }
         }
+        // let initial_walk_dir = Walkdir::new(&self.se_root_dir).into_iter().filter_map(|e| e.Ok());
     }
+    fn calculate_hashes(&mut self, absolute_path_to_file: &Path){
 
+        let current_file = match File::open(absolute_path_to_file){
+            Ok(file) => file,
+            // Err(err) => panic!("ERROR: while read file in function calculate_hashes {}",err),
+            Err(err) => panic!("ERROR: while read file in function calculate_hashes {}",err),
+    
+        };
+        let mut buf_reader = BufReader::new(current_file);
+        let mut ctx = Context::new(&SHA256);
+        let mut buffer = [0;4096];
+        loop {
+            let count = match buf_reader.read(&mut buffer){
+                Ok(count) => count,
+                Err(err) => panic!("ERROR: while calculate checksum{}",err)
+            };
+            if count == 0 {
+                break;
+            }
+            ctx.update(&buffer[..count]);
+        }
+        let hash = ctx.finish();
+        // Push gen hash value into SearchEngineFile Hash vector 
+        self.se_file.file_hashes.push(hash);
+        //DEBUG Print
+        // println!("{:?}", hash);
+}
     fn scan_file(){
 
     }
@@ -148,9 +137,9 @@ impl SearchEngine{
 }
 
 fn main() {
-
+    println!("hello");
     let mut s1=SearchEngine::new();
     s1.start_search();
+    // s1.start_search();
     s1.debug();
-
 }
