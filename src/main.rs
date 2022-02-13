@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::fs;
+use std::{fs, panic};
 use std::fs::{File, OpenOptions};
 use std::io;
 
@@ -29,11 +29,15 @@ enum SearchEngineFileExtension{
 #[derive(Debug)]
 struct SearchEngineFile{
     //TODO add File with multiple file headers
-    file_name: String,
+    //TODO create hashmap
+    file_name: Vec<String>,
+    //TODO create hashmap
     file_extension: String,
-    file_size: u16,
+    //TODO create hashmap
+    file_size: Vec<u64>,
     // parse meta data creation time, modified time ....
     // FileCreationDate, 
+    //TODO create hashmap
     file_hashes: Vec<Digest>,
     is_malicious: bool,
     is_directory: bool,
@@ -43,16 +47,16 @@ impl SearchEngineFile{
 
     fn new() -> Self{
         Self{
-            file_name: "".to_string(),
+            file_name: Vec::new(),
             file_extension: "".to_string(),
-            file_size: 0,
+            file_size: Vec::new(),
             file_hashes: Vec::new(),
             is_malicious: false,
             is_directory: false,
         }    
     }
     fn debug(&self){
-        println!("Search Engine File {:?}",self);
+        println!("Search Engine File {:#?}",self);
     }
  }
 
@@ -62,6 +66,7 @@ struct SearchEngine{
     se_root_dir: String,
     se_current_dir: String,
     se_file: SearchEngineFile,
+    //TODO create hashmap
     // se_file: HashMap<String, SearchEngineFile>,
     //TODO get all system devices => look for root device on windows or linux and create default root entrypoint for the OS
     /*TODO Check OS */
@@ -88,8 +93,7 @@ impl SearchEngine{
         }
     }
     fn debug(&self){
-        println!("Search Engine {:?}",self);
-        // println!("Search Engine {:?}",self.se_file.debug());
+        println!("Search Engine {:#?}",self);
     }
 
     fn start_search(&mut self){
@@ -98,7 +102,11 @@ impl SearchEngine{
             //DEBUG Print 
             // println!("{:?}",entry.file_name());
             if entry.path().is_file(){
-                self.calculate_hashes(&entry.path())
+                self.calculate_hashes(&entry.path());
+                self.calculate_size(&entry.path());
+                self.calculate_extension(&entry.path());
+                //TODO create methods for name
+                // self.se_file.file_name.push(entry.path()); 
             }
         }
         // let initial_walk_dir = Walkdir::new(&self.se_root_dir).into_iter().filter_map(|e| e.Ok());
@@ -130,6 +138,26 @@ impl SearchEngine{
         //DEBUG Print
         // println!("{:?}", hash);
 }
+
+    fn calculate_size(&mut self, path: &Path){
+        self.se_file.file_size.push(fs::metadata(path).unwrap().len());
+        //DEBUG print
+        // println!("{}",self.se_file.file_size);
+    }
+    fn calculate_extension(&mut self, path: &Path){
+
+        //self.se_file.file_extension.push(path.extension())
+
+        // self.se_file.file_size.push(path.extension());
+        // println!("{:#?}",path.extension());
+        // println!("{:#?}",fs::metadata(path));
+        // match path.extension(){
+        //     Ok(extension) =>self.se_file.file_name.push(extension),
+        //     Err(e) => panic!("Error: While reading extension "),
+        // }
+
+    }
+
     fn scan_file(){
 
     }
@@ -140,6 +168,8 @@ fn main() {
     println!("hello");
     let mut s1=SearchEngine::new();
     s1.start_search();
+    //s1.calculate_extension();
     // s1.start_search();
     s1.debug();
+    s1.se_file.debug();
 }
