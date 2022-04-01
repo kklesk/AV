@@ -29,6 +29,10 @@ enum SearchEngineFileExtension{
 #[derive(Debug)]
 struct SearchEngineFile{
     //TODO add File with multiple file headers
+    //magicbyte Vec array for unsigned 8 bytes X MagicBytes
+    //file_magic_byte: Vec<[u8;X]>
+    // file_magic_byte: Vec<[u8;4]>,
+    file_magic_byte: Vec<String>,
     //TODO create hashmap
     file_name: Vec<String>,
     //TODO create hashmap
@@ -38,6 +42,7 @@ struct SearchEngineFile{
     // parse meta data creation time, modified time ....
     // FileCreationDate, 
     //TODO create hashmap
+    //md5 size = 16;sha1 size= 20; sha256 size = 32
     file_hashes: Vec<Digest>,
     is_malicious: bool,
     is_directory: bool,
@@ -47,6 +52,7 @@ impl SearchEngineFile{
 
     fn new() -> Self{
         Self{
+            file_magic_byte: Vec::new(),
             file_name: Vec::new(),
             file_extension: "".to_string(),
             file_size: Vec::new(),
@@ -105,12 +111,36 @@ impl SearchEngine{
                 self.calculate_hashes(&entry.path());
                 self.calculate_size(&entry.path());
                 self.calculate_extension(&entry.path());
+                self.calculate_magic_byte(&entry.path());
                 //TODO create methods for name
                 // self.se_file.file_name.push(entry.path()); 
             }
         }
         // let initial_walk_dir = Walkdir::new(&self.se_root_dir).into_iter().filter_map(|e| e.Ok());
     }
+    // calculate the first X bytes for each file -> to get magic bytes
+    fn calculate_magic_byte(&mut self, absolute_path_to_file: &Path){
+
+        // to parameterize the x bytes
+        // buffer: unsigned 8byte array
+        let mut buffer:[u8;4] = [0;4];
+  
+        let mut current_file = match File::open(absolute_path_to_file){
+            Ok(file) => file,
+            Err(err) => panic!("Err: while reading magic bytes {:?}", err),
+        };
+        // check is magicbyte available
+        match Read::read(&mut current_file, &mut buffer){
+            Ok(current_file) => current_file,
+            Err(err) => panic!("Err: while reading magic bytes {:?}", err),
+        };
+        //Debug Print
+        println!("In Function calculate_magic_byte {:#06X?} for fiil: {:?}",buffer, absolute_path_to_file.file_name());
+        //TODO push magicbyte into self.se_file.file_extension Vec!!
+        // self.se_file.file_extension.push(buffer);
+
+    }
+
     fn calculate_hashes(&mut self, absolute_path_to_file: &Path){
 
         let current_file = match File::open(absolute_path_to_file){
@@ -119,6 +149,7 @@ impl SearchEngine{
             Err(err) => panic!("ERROR: while read file in function calculate_hashes {}",err),
     
         };
+        // generate hash values for each file
         let mut buf_reader = BufReader::new(current_file);
         let mut ctx = Context::new(&SHA256);
         let mut buffer = [0;4096];
@@ -171,5 +202,7 @@ fn main() {
     //s1.calculate_extension();
     // s1.start_search();
     s1.debug();
+
+    println!("#\n#\n#\n#\n");
     s1.se_file.debug();
 }
