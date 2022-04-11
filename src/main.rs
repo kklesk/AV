@@ -49,14 +49,14 @@ struct SearchEngineFile{
 }
 
 impl SearchEngineFile{
-
+ 
     fn new() -> Self{
         Self{
             file_magic_byte: Vec::new(),
             file_name: Vec::new(),
             file_extension: "".to_string(),
             file_size: Vec::new(),
-            file_hashes: Vec::new(),
+            file_hashes: Vec::new(), 
             is_malicious: false,
             is_directory: false,
         }    
@@ -124,6 +124,7 @@ impl SearchEngine{
         // to parameterize the x bytes
         // buffer: unsigned 8byte array
         let mut buffer:[u8;4] = [0;4];
+        // let mut buffer_to_str;
   
         let mut current_file = match File::open(absolute_path_to_file){
             Ok(file) => file,
@@ -138,6 +139,13 @@ impl SearchEngine{
         println!("In Function calculate_magic_byte {:#06X?} for fiil: {:?}",buffer, absolute_path_to_file.file_name());
         //TODO push magicbyte into self.se_file.file_extension Vec!!
         // self.se_file.file_extension.push(buffer);
+        // buffer_to_str = std::str::from_utf8(&mut buffer);
+
+        let magic_bytes_in_string = match std::str::from_utf8(&mut buffer){
+            Ok(magic_bytes_in_string) => magic_bytes_in_string.to_string() ,
+            Err(err) => panic!("Err: while set magic byte to struct {:?}", err),
+        };
+        self.se_file.file_magic_byte.push( magic_bytes_in_string);
 
     }
 
@@ -203,6 +211,6 @@ fn main() {
     // s1.start_search();
     s1.debug();
 
-    println!("#\n#\n#\n#\n");
+    // println!("#\n#\n#\n#\n");
     s1.se_file.debug();
 }
