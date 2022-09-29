@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::path::Path;
-use std::{fs, panic};
+use std::path::{Display, Path};
+use std::{fmt, fs, panic};
 use std::fs::{File, OpenOptions};
 use std::io;
 
@@ -68,8 +68,9 @@ impl SearchEngineFile{
 
 
 #[derive(Debug)]
-struct SearchEngine{
+struct SearchEngine<T>{
     se_root_dir: String,
+    se_second_root_dir: T,
     se_current_dir: String,
     se_file: SearchEngineFile,
     //TODO create hashmap
@@ -88,19 +89,34 @@ struct SearchEngine{
     
 }
 
-impl SearchEngine{
-    fn new() -> Self{
+impl<T> fmt::Display for SearchEngine<T>
+    where
+        T: fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
+        write!(f,"se_second_root_dir is:{}",self.se_second_root_dir)
+    }
+
+}
+
+impl <T> SearchEngine<T>{
+    fn new(root_dir: T) -> Self{
         Self {
             se_root_dir: String::from("C:\\Users\\Ivan\\development\\test_instance\\testfolder_files\\"),
+            se_second_root_dir: root_dir,
             //TODO Read User from WIndows API (%USERPROFILE%) and Linux 
             // for directory scan
             se_current_dir: String::from("C:\\Users\\%USERPROFILE%"),
             se_file: SearchEngineFile::new(),
         }
     }
-    fn debug(&self){
-        println!("Search Engine {:#?}",self);
-    }
+        fn set_root_dir(&mut self,  new_root_dir: T){
+            self.se_second_root_dir = new_root_dir;
+        }
+
+   // fn debug(&self){
+     //   println!("Search Engine {:#?}",self);
+    //}
 
     fn start_search(&mut self){
 
@@ -183,6 +199,7 @@ impl SearchEngine{
         //DEBUG print
         // println!("{}",self.se_file.file_size);
     }
+    //TODO
     fn calculate_extension(&mut self, path: &Path){
 
         //self.se_file.file_extension.push(path.extension())
@@ -204,13 +221,14 @@ impl SearchEngine{
 }
 
 fn main() {
-    println!("hello");
-    let mut s1=SearchEngine::new();
+    let path = Path::new("C:\\Users\\Ivan\\development\\");
+    let mut s1=SearchEngine::new(path);
+    //println!("{:#?}",s1.se_second_root_dir);
     s1.start_search();
     //s1.calculate_extension();
     // s1.start_search();
-    s1.debug();
+    // s1.debug();
 
     // println!("#\n#\n#\n#\n");
-    s1.se_file.debug();
+    // s1.se_file.debug();
 }
